@@ -1,0 +1,832 @@
+{
+	"info": {
+		"_postman_id": "82833316-a2b8-4b27-a377-f91cb6ee1995",
+		"name": "ServeRest - Novo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46194096"
+	},
+	"item": [
+		{
+			"name": "usuarios",
+			"item": [
+				{
+					"name": "Cadastrar usuario - Validar mensagens de erro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Retorna 400 Bad Request e as mensagens de erro corretas\", function () {\r",
+									"    // 1. Valida o código de status HTTP\r",
+									"    pm.response.to.have.status(400);\r",
+									"\r",
+									"    // 2. Acessa o JSON da resposta\r",
+									"    const responseData = pm.response.json();\r",
+									"\r",
+									"    // 3. Valida a estrutura e os valores das mensagens de erro\r",
+									"    pm.expect(responseData).to.be.an('object');\r",
+									"\r",
+									"    pm.expect(responseData.nome).to.eql(\"nome não pode ficar em branco\");\r",
+									"    pm.expect(responseData.email).to.eql(\"email não pode ficar em branco\");\r",
+									"    pm.expect(responseData.password).to.eql(\"password não pode ficar em branco\");\r",
+									"    pm.expect(responseData.administrador).to.eql(\"administrador deve ser 'true' ou 'false'\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"administrador\": \"\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cadastrar usuario com sucesso",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Acessa o JSON da resposta\r",
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"// Um único teste completo para todas as validações de sucesso\r",
+									"pm.test(\"O cadastro foi bem-sucedido e a resposta está correta\", function () {\r",
+									"    // 1. Valida o status code 201 Created\r",
+									"    pm.expect(pm.response.code).to.equal(201);\r",
+									"\r",
+									"    // 2. Valida a estrutura e os valores da resposta\r",
+									"    pm.expect(jsonData).to.be.an('object');\r",
+									"    pm.expect(jsonData).to.have.all.keys('message', '_id');\r",
+									"    \r",
+									"    // 3. Valida a mensagem de sucesso\r",
+									"    pm.expect(jsonData.message).to.eql(\"Cadastro realizado com sucesso\");\r",
+									"\r",
+									"    // 4. Valida o formato do ID (string alfanumérica com 16 caracteres)\r",
+									"    pm.expect(jsonData._id).to.be.a('string');\r",
+									"    pm.expect(jsonData._id).to.match(/^[a-zA-Z0-9]{16}$/);\r",
+									"});\r",
+									"\r",
+									"// Este script salva o ID em uma variável global para uso futuro\r",
+									"if (jsonData && jsonData._id) {\r",
+									"    pm.globals.set(\"userId\", jsonData._id);\r",
+									"    console.log(\"Variável global 'userId' criada:\", jsonData._id);\r",
+									"} else {\r",
+									"    console.log(\"O _id não foi encontrado na resposta.\");\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"packages": {},
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"{{$randomFullName}}\",\n  \"email\": \"{{$randomEmail}}\",\n  \"password\": \"{{$randomAlphaNumeric}}\",\n  \"administrador\": \"true\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar usuários cadastrados",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Acessa o corpo da resposta JSON uma única vez\r",
+									"const responseData = pm.response.json();\r",
+									"\r",
+									"// Verifica se a lista de usuários existe e não está vazia\r",
+									"if (responseData && responseData.usuarios && responseData.usuarios.length > 0) {\r",
+									"    // Pega o último usuário da lista (o mais recente)\r",
+									"    const mostRecentUser = responseData.usuarios[responseData.usuarios.length - 1];\r",
+									"\r",
+									"    // Salva o _id na variável global \"userToManageId\"\r",
+									"    pm.globals.set(\"userToManageId\", mostRecentUser._id);\r",
+									"\r",
+									"    // Salva o email e a senha em variáveis globais\r",
+									"    pm.globals.set(\"mostRecentUserEmail\", mostRecentUser.email);\r",
+									"    pm.globals.set(\"mostRecentUserPassword\", mostRecentUser.password);\r",
+									"\r",
+									"    // Opcional: Imprime no console para verificar\r",
+									"    console.log(\"Variável global 'userToManageId' criada com o ID:\", mostRecentUser._id);\r",
+									"    console.log(\"Variável global 'mostRecentUserEmail' criada com o Email:\", mostRecentUser.email);\r",
+									"    console.log(\"Variável global 'mostRecentUserPassword' criada com a senha:\", mostRecentUser.password);\r",
+									"} else {\r",
+									"    // Caso a lista de usuários esteja vazia ou a resposta seja inválida\r",
+									"    console.log(\"A lista de usuários está vazia ou a resposta é inválida.\");\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Response status code is 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"Response conforms to the expected schema\", function () {\r",
+									"    const responseData = pm.response.json();\r",
+									"\r",
+									"    pm.expect(responseData).to.be.an('object');\r",
+									"    pm.expect(responseData).to.have.all.keys('quantidade', 'usuarios');\r",
+									"\r",
+									"    pm.expect(responseData.quantidade).to.be.a('number');\r",
+									"\r",
+									"    pm.expect(responseData.usuarios).to.be.an('array');\r",
+									"    responseData.usuarios.forEach(function(usuario) {\r",
+									"        pm.expect(usuario).to.be.an('object');\r",
+									"        pm.expect(usuario).to.have.all.keys('nome', 'email', 'password', 'administrador', '_id');\r",
+									"        pm.expect(usuario.nome).to.be.a('string');\r",
+									"        pm.expect(usuario.email).to.be.a('string').and.to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/, \"Email format is invalid\");\r",
+									"        pm.expect(usuario.password).to.be.a('string');\r",
+									"        pm.expect(usuario.administrador).to.be.a('string');\r",
+									"        pm.expect(usuario._id).to.be.a('string');\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"Quantidade field must be a non-negative integer\", function () {\r",
+									"    const responseData = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(responseData).to.be.an('object');\r",
+									"    pm.expect(responseData.quantidade).to.exist.and.to.be.a('number').and.to.be.at.least(0, \"Quantidade should be a non-negative integer\");\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"The 'usuarios' array contains objects with required fields\", function () {\r",
+									"    const responseData = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(responseData).to.be.an('object');\r",
+									"    pm.expect(responseData.usuarios).to.be.an('array').that.is.not.empty;\r",
+									"\r",
+									"    responseData.usuarios.forEach(function(usuario) {\r",
+									"        pm.expect(usuario).to.have.all.keys('nome', 'email', 'password', 'administrador', '_id');\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar usuário por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Acessa o corpo da resposta JSON uma única vez\r",
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"// 1. Teste de Status Code\r",
+									"pm.test(\"Status code é 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// 2. Teste de Tipo de Conteúdo\r",
+									"pm.test(\"Tipo de conteúdo é JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"// 3. Teste de Estrutura e Valores\r",
+									"pm.test(\"A resposta tem a estrutura e os tipos de dados corretos\", function () {\r",
+									"    // 3.1. Verifica a existência dos campos\r",
+									"    pm.expect(jsonData).to.have.property(\"nome\");\r",
+									"    pm.expect(jsonData).to.have.property(\"email\");\r",
+									"    pm.expect(jsonData).to.have.property(\"password\");\r",
+									"    pm.expect(jsonData).to.have.property(\"administrador\");\r",
+									"    pm.expect(jsonData).to.have.property(\"_id\");\r",
+									"\r",
+									"    // 3.2. Valida o tipo de dado de cada campo\r",
+									"    pm.expect(jsonData.nome).to.be.a('string');\r",
+									"    pm.expect(jsonData.email).to.be.a('string');\r",
+									"    pm.expect(jsonData.password).to.be.a('string');\r",
+									"    pm.expect(jsonData.administrador).to.be.a('string');\r",
+									"\r",
+									"    // 3.3. Valida o formato do _id (alfanumérico com 16 caracteres)\r",
+									"    pm.expect(jsonData._id).to.be.a('string');\r",
+									"    pm.expect(jsonData._id).to.match(/^[a-zA-Z0-9]{16}$/);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Obtém o valor da variável global 'userToManageId'\r",
+									"const userToFindId = pm.globals.get(\"userToManageId\");\r",
+									"\r",
+									"// Imprime no console para verificar\r",
+									"console.log(\"Variável global 'userToManageId' recuperada:\", userToFindId);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/{{userToManageId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"{{userToManageId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Usuário não encontrado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Resposta de usuário não encontrado\", function () {\r",
+									"    // 1. Testa se o status code é 400 Bad Request\r",
+									"    pm.response.to.have.status(400);\r",
+									"\r",
+									"    // 2. Analisa o corpo da resposta\r",
+									"    const jsonData = pm.response.json();\r",
+									"\r",
+									"    // 3. Valida se a mensagem de erro está correta\r",
+									"    pm.expect(jsonData.message).to.eql(\"Usuário não encontrado\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/:_id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								":_id"
+							],
+							"variable": [
+								{
+									"key": "_id",
+									"value": "0uxuPY0cbmQhpEz7"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "login",
+			"item": [
+				{
+					"name": "Listar usuários cadastrados",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Acessa o corpo da resposta JSON uma única vez\r",
+									"const responseData = pm.response.json();\r",
+									"\r",
+									"// Verifica se a lista de usuários existe e não está vazia\r",
+									"if (responseData && responseData.usuarios && responseData.usuarios.length > 0) {\r",
+									"    // Pega o último usuário da lista (o mais recente)\r",
+									"    const mostRecentUser = responseData.usuarios[responseData.usuarios.length - 1];\r",
+									"\r",
+									"    // Salva o _id na variável global \"userToManageId\"\r",
+									"    pm.globals.set(\"userToManageId\", mostRecentUser._id);\r",
+									"\r",
+									"    // Salva o email e a senha em variáveis globais\r",
+									"    pm.globals.set(\"mostRecentUserEmail\", mostRecentUser.email);\r",
+									"    pm.globals.set(\"mostRecentUserPassword\", mostRecentUser.password);\r",
+									"\r",
+									"    // Opcional: Imprime no console para verificar\r",
+									"    console.log(\"Variável global 'userToManageId' criada com o ID:\", mostRecentUser._id);\r",
+									"    console.log(\"Variável global 'mostRecentUserEmail' criada com o Email:\", mostRecentUser.email);\r",
+									"    console.log(\"Variável global 'mostRecentUserPassword' criada com a senha:\", mostRecentUser.password);\r",
+									"} else {\r",
+									"    // Caso a lista de usuários esteja vazia ou a resposta seja inválida\r",
+									"    console.log(\"A lista de usuários está vazia ou a resposta é inválida.\");\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Response status code is 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"Response conforms to the expected schema\", function () {\r",
+									"    const responseData = pm.response.json();\r",
+									"\r",
+									"    pm.expect(responseData).to.be.an('object');\r",
+									"    pm.expect(responseData).to.have.all.keys('quantidade', 'usuarios');\r",
+									"\r",
+									"    pm.expect(responseData.quantidade).to.be.a('number');\r",
+									"\r",
+									"    pm.expect(responseData.usuarios).to.be.an('array');\r",
+									"    responseData.usuarios.forEach(function(usuario) {\r",
+									"        pm.expect(usuario).to.be.an('object');\r",
+									"        pm.expect(usuario).to.have.all.keys('nome', 'email', 'password', 'administrador', '_id');\r",
+									"        pm.expect(usuario.nome).to.be.a('string');\r",
+									"        pm.expect(usuario.email).to.be.a('string').and.to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/, \"Email format is invalid\");\r",
+									"        pm.expect(usuario.password).to.be.a('string');\r",
+									"        pm.expect(usuario.administrador).to.be.a('string');\r",
+									"        pm.expect(usuario._id).to.be.a('string');\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"Quantidade field must be a non-negative integer\", function () {\r",
+									"    const responseData = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(responseData).to.be.an('object');\r",
+									"    pm.expect(responseData.quantidade).to.exist.and.to.be.a('number').and.to.be.at.least(0, \"Quantidade should be a non-negative integer\");\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"The 'usuarios' array contains objects with required fields\", function () {\r",
+									"    const responseData = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(responseData).to.be.an('object');\r",
+									"    pm.expect(responseData.usuarios).to.be.an('array').that.is.not.empty;\r",
+									"\r",
+									"    responseData.usuarios.forEach(function(usuario) {\r",
+									"        pm.expect(usuario).to.have.all.keys('nome', 'email', 'password', 'administrador', '_id');\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login ou senha inválido",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verifica se o status é 401 (não autorizado)\r",
+									"pm.test(\"Status code é 401\", function () {\r",
+									"    pm.response.to.have.status(401);\r",
+									"});\r",
+									"\r",
+									"// Verifica se a resposta é JSON válido\r",
+									"pm.test(\"Resposta é JSON válido\", function () {\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"// Verifica se a mensagem de erro está correta\r",
+									"pm.test(\"Mensagem de erro está correta\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.message).to.eql(\"Email e/ou senha inválidos\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"fulano@qa.com\",\n  \"password\": \"test\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "## Teste de Login Inválido\n\n- **Status Code**\n    \n    - Verifica se a requisição retornou o status `401 Unauthorized`, confirmando que as credenciais foram rejeitadas.\n        \n- **Validação da Resposta**\n    \n    - Garante que o corpo da resposta está em um formato JSON válido.\n        \n- **Validação de Mensagem**\n    \n    - Confirma que a resposta contém a mensagem de erro específica: `\"Email e/ou senha inválidos\"`."
+					},
+					"response": []
+				},
+				{
+					"name": "Realizar Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Verifica se o status é 200\r",
+									"pm.test(\"Status code é 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Verifica se a resposta é JSON válido\r",
+									"pm.test(\"Resposta é JSON válido\", function () {\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"// Verifica se contém a mensagem de sucesso correta\r",
+									"pm.test(\"Mensagem de sucesso está correta\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.message).to.eql(\"Login realizado com sucesso\");\r",
+									"});\r",
+									"\r",
+									"// Verifica se o campo authorization existe e começa com Bearer\r",
+									"pm.test(\"Authorization token presente\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"authorization\");\r",
+									"    pm.expect(jsonData.authorization).to.include(\"Bearer \");\r",
+									"});\r",
+									"\r",
+									"// Salva o token em variável de ambiente para uso posterior\r",
+									"let token = pm.response.json().authorization;\r",
+									"if (token) {\r",
+									"    pm.environment.set(\"authToken\", token);\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{mostRecentUserEmail}}\",\n  \"password\": \"{{mostRecentUserPassword}}\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Editar e Deletar usuário",
+			"item": [
+				{
+					"name": "Editar usuário",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Registro alterado com sucesso\", function () {\r",
+									"    // Valida se o status da resposta é 200 OK\r",
+									"    pm.response.to.have.status(200);\r",
+									"\r",
+									"    // Acessa o corpo da resposta JSON\r",
+									"    const jsonData = pm.response.json();\r",
+									"\r",
+									"    // Valida se a mensagem de sucesso está correta\r",
+									"    pm.expect(jsonData.message).to.eql(\"Registro alterado com sucesso\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"{{$randomFullName}}\",\n  \"email\": \"{{$randomEmail}}\",\n  \"password\": \"{{$randomAlphaNumeric}}\",\n  \"administrador\": \"true\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/{{userToManageId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"{{userToManageId}}"
+							]
+						},
+						"description": "Não é permitido cadastrar usuário com email já utilizado.\nCaso não seja encontrado usuário com o ID informado é realizado novo cadastro ao invés de alteração.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Excluir usuário",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"O registro foi excluído e a mensagem está correta\", function () {\r",
+									"    // 1. Valida o status code da requisição\r",
+									"    pm.response.to.have.status(200);\r",
+									"\r",
+									"    // 2. Acessa o JSON da resposta\r",
+									"    const jsonData = pm.response.json();\r",
+									"\r",
+									"    // 3. Valida se a mensagem de sucesso está correta\r",
+									"    pm.expect(jsonData.message).to.eql(\"Registro excluído com sucesso\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/{{userToManageId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"{{userToManageId}}"
+							]
+						},
+						"description": "Não é permitido excluir usuário com carrinho."
+					},
+					"response": []
+				},
+				{
+					"name": "Excluir usuário - Usuário não encontrado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Não é possível excluir usuário com carrinho cadastrado\", function () {\r",
+									"    // 1. Valida o status code 400 Bad Request\r",
+									"    pm.response.to.have.status(400);\r",
+									"\r",
+									"    // 2. Acessa o JSON da resposta\r",
+									"    const jsonData = pm.response.json();\r",
+									"\r",
+									"    // 3. Valida se as chaves existem no corpo da resposta\r",
+									"    pm.expect(jsonData).to.have.all.keys('message', 'idCarrinho');\r",
+									"    \r",
+									"    // 4. Valida a mensagem de erro específica\r",
+									"    pm.expect(jsonData.message).to.eql(\"Não é permitido excluir usuário com carrinho cadastrado\");\r",
+									"\r",
+									"    // 5. Valida a presença do ID do carrinho\r",
+									"    pm.expect(jsonData.idCarrinho).to.be.a('string');\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/:_id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								":_id"
+							],
+							"variable": [
+								{
+									"key": "_id",
+									"value": "0uxuPY0cbmQhpEz1",
+									"description": "(Required) ID do usuário"
+								}
+							]
+						},
+						"description": "Não é permitido excluir usuário com carrinho."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

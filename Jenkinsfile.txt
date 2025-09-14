@@ -1,0 +1,10 @@
+stage('API Tests') {
+    steps {
+        // Instala o Newman no ambiente de execução
+        sh 'npm install -g newman newman-reporter-htmlextra'
+        // Roda a coleção e gera o relatório em HTML
+        sh 'newman run sua-colecao.json --environment seu-ambiente.json --reporters cli,htmlextra'
+        // Salva o relatório como artefato na pipeline
+        archiveArtifacts artifacts: 'newman/*.html'
+    }
+}
